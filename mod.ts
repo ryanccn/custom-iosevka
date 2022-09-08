@@ -50,7 +50,7 @@ for await (
       '--fontawesomeextension',
       '--quiet',
       '--output',
-      '../build',
+      join(Deno.cwd(), '../build'),
     ]);
   }
 }
