@@ -28,7 +28,7 @@ await exec(['npm', 'run', 'build', '--', 'ttf::ryans-iosevka']);
 
 Deno.chdir('../nerd-fonts');
 
-const ORIGINAL_TTF_DIR = '../iosevka/dist/ryans-iosevka/ttf';
+const ORIGINAL_TTF_DIR = join(Deno.cwd(), '../iosevka/dist/ryans-iosevka/ttf');
 
 for await (
   const originalTTF of Deno.readDir(ORIGINAL_TTF_DIR)
@@ -39,7 +39,7 @@ for await (
     await exec([
       '../fontforge',
       '-script',
-      './font-patcher',
+      join(Deno.cwd(), 'font-patcher'),
       join(ORIGINAL_TTF_DIR, originalTTF.name),
       '--careful',
       '--fontawesome',
