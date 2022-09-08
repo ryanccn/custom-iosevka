@@ -39,7 +39,7 @@ for await (
     await exec([
       '../fontforge',
       '-script',
-      'font-patcher',
+      './font-patcher',
       join(ORIGINAL_TTF_DIR, originalTTF.name),
       '--careful',
       '--fontawesome',
