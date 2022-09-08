@@ -20,10 +20,9 @@ jobs:
 
       - name: install fontforge
         run: |
-          sudo apt-get install software-properties-common;
-          sudo add-apt-repository ppa:fontforge/fontforge;
-          sudo apt-get update;
-          sudo apt-get install fontforge;
+          mkdir work
+          curl -fsSL 'https://github.com/fontforge/fontforge/releases/download/20220308/FontForge-2022-03-08-582bd41-x86_64.AppImage' > work/fontforge
+          chmod +x work/fontforge
 
       - name: build
         run: deno run -A mod.ts

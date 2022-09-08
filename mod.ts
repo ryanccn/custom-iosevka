@@ -37,7 +37,7 @@ for await (
 
   if (originalTTF.isFile && originalTTF.name.endsWith('.ttf')) {
     await exec([
-      'fontforge',
+      '../fontforge',
       '-script',
       'font-patcher',
       join(ORIGINAL_TTF_DIR, originalTTF.name),
