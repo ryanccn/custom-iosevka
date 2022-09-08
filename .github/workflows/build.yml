@@ -1,24 +1,25 @@
-name: build
+name: Build and publish
+
 on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 * * 0'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v2
       
-      - name: setup deno
+      - name: Setup deno
         uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
 
-      - name: install fonts stuff
+      - name: Install fonts dependencies
         run: |
           mkdir work
           curl -fsSL 'https://github.com/fontforge/fontforge/releases/download/20220308/FontForge-2022-03-08-582bd41-x86_64.AppImage' > work/fontforge
@@ -26,11 +27,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install ttfautohint
 
-      - name: build
+      - name: Build
         run: deno run -A mod.ts
 
-      - name: capture build artifacts
+      - name: Capture build artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ryans-iosevka.zip
           path: work/ryans-iosevka.zip
+      
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: v${{ steps.date.outputs.date }}
+          tag_name: ${{ steps.date.outputs.date }}
+          files: work/ryans-iosevka.zip
