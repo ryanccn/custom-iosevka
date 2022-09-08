@@ -1,0 +1,35 @@
+name: build
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v2
+      
+      - name: setup deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: install fontforge
+        run: |
+          sudo apt-get install software-properties-common;
+          sudo add-apt-repository ppa:fontforge/fontforge;
+          sudo apt-get update;
+          sudo apt-get install fontforge;
+
+      - name: build
+        run: deno run -A mod.ts
+
+      - name: capture build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ryans-iosevka.zip
+          path: work/ryans-iosevka.zip
