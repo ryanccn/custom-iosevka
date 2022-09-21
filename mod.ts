@@ -42,7 +42,7 @@ for await (
       join(Deno.cwd(), 'font-patcher'),
       join(ORIGINAL_TTF_DIR, originalTTF.name),
       '--careful',
-      '--fontawesome',
+      '--material',
       '--octicons',
       '--powerline',
       '--powerlineextra',
