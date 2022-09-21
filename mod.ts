@@ -1,6 +1,7 @@
 import { exec, gitClone } from './exec.ts';
 import { join } from 'https://deno.land/std@0.154.0/path/mod.ts';
 import { bold, green } from 'https://deno.land/std@0.154.0/fmt/colors.ts';
+import { writeAll } from 'https://deno.land/std@0.156.0/streams/conversion.ts';
 
 {
   try {
@@ -14,8 +15,39 @@ import { bold, green } from 'https://deno.land/std@0.154.0/fmt/colors.ts';
   Deno.chdir('work/');
 }
 
+// Install FontForge via AppImage
+
+{
+  const a = await fetch(
+    'https://api.github.com/repos/fontforge/fontforge/releases',
+  ).then((r) => r.json());
+
+  const latest: string =
+    a[0].assets.filter((b: { name: string }) => b.name.includes('AppImage'))[0]
+      .browser_download_url;
+
+  const appImage = await fetch(latest).then((r) => r.body);
+  if (!appImage) throw new Error('AppImage not found');
+
+  const appImageFile = await Deno.open('fontforge', {
+    create: true,
+    write: true,
+  });
+
+  for await (const chunk of appImage) {
+    await writeAll(appImageFile, chunk);
+  }
+
+  appImageFile.close();
+  await Deno.chmod('fontforge', 0o755);
+}
+
+// Clone dependencies
+
 await gitClone('https://github.com/be5invis/Iosevka.git', 'iosevka');
 await gitClone('https://github.com/ryanoasis/nerd-fonts.git', 'nerd-fonts');
+
+// Build Iosevka
 
 await Deno.copyFile(
   '../private-build-plans.toml',
@@ -25,6 +57,8 @@ await Deno.copyFile(
 Deno.chdir('iosevka');
 await exec(['npm', 'ci']);
 await exec(['npm', 'run', 'build', '--', 'ttf::ryans-iosevka']);
+
+// Patch with Nerd Fonts
 
 Deno.chdir('../nerd-fonts');
 
@@ -69,6 +103,8 @@ for await (const patchedTTF of Deno.readDir('.')) {
     console.log(green(`Renamed ${original} to ${newName}`));
   }
 }
+
+// Packaging
 
 await exec(['zip', '-r', '../ryans-iosevka.zip', '.']);
 
