@@ -21,9 +21,6 @@ jobs:
 
       - name: Install fonts dependencies
         run: |
-          mkdir work
-          curl -fsSL 'https://github.com/fontforge/fontforge/releases/download/20220308/FontForge-2022-03-08-582bd41-x86_64.AppImage' > work/fontforge
-          chmod +x work/fontforge
           sudo apt-get update
           sudo apt-get install ttfautohint
 
