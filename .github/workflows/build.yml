@@ -23,6 +23,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install ttfautohint
+          sudo add-apt-repository universe
+          sudo apt install libfuse2
 
       - name: Build
         run: deno run -A mod.ts
