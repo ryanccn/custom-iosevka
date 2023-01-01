@@ -79,6 +79,7 @@ for await (
       '--material',
       '--powerline',
       '--fontawesome',
+      '--octicons',
       '--quiet',
       '--output',
       join(Deno.cwd(), '../build'),
