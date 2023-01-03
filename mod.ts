@@ -81,7 +81,6 @@ for await (
       '--fontawesome',
       '--fontawesomeextension',
       '--codicons',
-      '--devicons',
       '--octicons',
       '--quiet',
       '--output',
