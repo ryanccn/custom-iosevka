@@ -79,7 +79,6 @@ for await (
       '--material',
       '--powerline',
       '--fontawesome',
-      '--fontawesomeextension',
       '--codicons',
       '--octicons',
       '--quiet',
