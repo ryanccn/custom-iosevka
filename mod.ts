@@ -101,9 +101,9 @@ for await (const patchedTTF of Deno.readDir('.')) {
 
 console.log('Packaging...');
 
-await exec(['zip', '-r', '../ryans-iosevka.zip', '.']);
+await exec(['zip', '-r', '../../ryans-iosevka.zip', '.']);
 
-Deno.chdir('..');
+Deno.chdir('../..');
 if (CI) await Deno.remove('work', { recursive: true });
 
 console.log('Done!');
