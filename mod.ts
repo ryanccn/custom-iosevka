@@ -1,53 +1,42 @@
-import { exec, gitClone } from './exec.ts';
-import { join } from 'https://deno.land/std@0.154.0/path/mod.ts';
-import { bold, green } from 'https://deno.land/std@0.154.0/fmt/colors.ts';
-import { writeAll } from 'https://deno.land/std@0.156.0/streams/conversion.ts';
+import { CI, downloadReleaseAsset, exec, gitClone } from './utils.ts';
+
+import { join } from 'https://deno.land/std@0.171.0/path/mod.ts';
+import { bold, green } from 'https://deno.land/std@0.171.0/fmt/colors.ts';
+
+console.log('Preparing...');
 
 {
   try {
-    await Deno.stat('work/');
+    await Deno.remove('work/', { recursive: true });
   } catch (e) {
-    if (e instanceof Deno.errors.NotFound) {
-      await Deno.mkdir('work/');
+    if (!(e instanceof Deno.errors.NotFound)) {
+      throw e;
     }
   }
 
+  await Deno.mkdir('work/');
   Deno.chdir('work/');
 }
 
-// Install FontForge via AppImage
-
-{
-  const a = await fetch(
-    'https://api.github.com/repos/fontforge/fontforge/releases',
-  ).then((r) => r.json());
-
-  const latest: string =
-    a[0].assets.filter((b: { name: string }) => b.name.includes('AppImage'))[0]
-      .browser_download_url;
-
-  const appImage = await fetch(latest).then((r) => r.body);
-  if (!appImage) throw new Error('AppImage not found');
-
-  const appImageFile = await Deno.open('fontforge', {
-    create: true,
-    write: true,
-  });
-
-  for await (const chunk of appImage) {
-    await writeAll(appImageFile, chunk);
-  }
-
-  appImageFile.close();
+if (CI) {
+  console.log('Installing FontForge...');
+  await downloadReleaseAsset('fontforge/fontforge', 'AppImage', 'fontforge');
   await Deno.chmod('fontforge', 0o755);
 }
 
-// Clone dependencies
-
+console.log('Downloading Iosevka source...');
 await gitClone('https://github.com/be5invis/Iosevka.git', 'iosevka');
-await gitClone('https://github.com/ryanoasis/nerd-fonts.git', 'nerd-fonts');
 
-// Build Iosevka
+console.log('Downloading Nerd Fonts Font Patcher...');
+await downloadReleaseAsset(
+  'ryanoasis/nerd-fonts',
+  'FontPatcher.zip',
+  'fontpatcher.zip',
+);
+
+await exec(['unzip', 'fontpatcher.zip', '-d', 'nerd-fonts']);
+
+console.log('Building Iosevka...');
 
 await Deno.copyFile(
   '../private-build-plans.toml',
@@ -58,7 +47,7 @@ Deno.chdir('iosevka');
 await exec(['npm', 'ci']);
 await exec(['npm', 'run', 'build', '--', 'ttf::ryans-iosevka']);
 
-// Patch with Nerd Fonts
+console.log('Patching in Nerd Fonts Symbols...');
 
 Deno.chdir('../nerd-fonts');
 
@@ -71,7 +60,7 @@ for await (
 
   if (originalTTF.isFile && originalTTF.name.endsWith('.ttf')) {
     await exec([
-      '../fontforge',
+      CI ? '../fontforge' : 'fontforge',
       '-script',
       join(Deno.cwd(), 'font-patcher'),
       join(ORIGINAL_TTF_DIR, originalTTF.name),
@@ -90,6 +79,8 @@ for await (
       '--output',
       join(Deno.cwd(), '../build'),
     ]);
+
+    console.log(`Patched ${originalTTF.name}`);
   }
 }
 
@@ -108,8 +99,11 @@ for await (const patchedTTF of Deno.readDir('.')) {
   }
 }
 
-// Packaging
+console.log('Packaging...');
 
 await exec(['zip', '-r', '../ryans-iosevka.zip', '.']);
 
 Deno.chdir('..');
+if (CI) await Deno.remove('work', { recursive: true });
+
+console.log('Done!');
